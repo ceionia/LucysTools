@@ -2,6 +2,8 @@ extends Node
 
 const LUCYS_MENU_SCENE = preload("res://mods/Lucy.LucysTools/lucys_menu.tscn")
 
+var host_required = true
+
 var lucys_menu = null
 onready var root = get_tree().root
 
@@ -13,6 +15,8 @@ var frame_packets = 50 setget set_frame_packets
 var bulk_packets = 200 setget set_bulk_packets
 var bulk_interval = 1 setget set_bulk_interval
 var full_interval = 5 setget set_full_interval
+
+var srv_allow_bbcode = false setget set_srv_bbcode
 
 # Patched Network vars
 # var LUCY_PACKETS_READ = 0
@@ -31,7 +35,12 @@ func set_punchback(punchback):
 	do_punchback = punchback
 func set_bbcode(bbcode):
 	allow_bbcode = bbcode
-	Network.LUCY_CHAT_BBCODE = bbcode
+	if Network.GAME_MASTER or not host_required: self.srv_allow_bbcode = bbcode
+func set_srv_bbcode(bbcode):
+	if Network.GAME_MASTER and not Network.PLAYING_OFFLINE: send_server_sync_actor()
+	srv_allow_bbcode = bbcode
+	Network.LUCY_CHAT_BBCODE = bbcode if host_required else allow_bbcode
+	if lucys_menu != null: lucys_menu.update()
 func set_server_name(name):
 	custom_server_name = name
 	Network.LUCY_SRV_NAME = name
@@ -58,6 +67,21 @@ func _ready():
 	root.connect("child_entered_tree", self, "_on_enter")
 	Network.connect("_new_player_join", self, "new_player")
 	PlayerData.connect("_punched", self, "punched")
+	Network.connect("_instance_actor", self, "_instance_actor")
+	
+
+func send_server_sync_actor(to = "peers"):
+	if not Network.GAME_MASTER: return
+	var dict = {"actor_type": "lucy_fake_actor", "at": Vector3.ZERO, "zone": "", "actor_id": 0, "creator_id": Network.STEAM_ID, "data": {
+		"allow_bbcode": allow_bbcode
+	}}
+	Network._send_P2P_Packet({"type": "instance_actor", "params": dict}, to, 2)
+
+func _instance_actor(dict, sender_id):
+	if dict["actor_type"] != "lucy_fake_actor": return
+	if sender_id != Network.KNOWN_GAME_MASTER or Network.GAME_MASTER: return
+	var data = dict["data"]
+	self.srv_allow_bbcode = data["allow_bbcode"]
 
 func get_player() -> Actor:
 	for p in get_tree().get_nodes_in_group("player"):
@@ -84,6 +108,7 @@ func new_player(id):
 	if server_join_message.empty() or not Network.GAME_MASTER: return
 	print("[LUCY] sending join message")
 	Network._send_message(server_join_message)
+	send_server_sync_actor(str(id))
 
 func _on_enter(node: Node):
 	if node.name == "main_menu":
@@ -95,6 +120,9 @@ func _on_enter(node: Node):
 		lucys_menu = LUCYS_MENU_SCENE.instance()
 		node.add_child(lucys_menu)
 		ingame = true
+		# retrigger setter
+		self.srv_allow_bbcode = false
+		self.allow_bbcode = allow_bbcode
 		lucys_menu.setup(self)
 
 func load_settings():
@@ -113,6 +141,7 @@ func load_settings():
 		self.bulk_packets = result.bulk_packets
 		self.bulk_interval = result.bulk_interval
 		self.full_interval = result.full_interval
+		self.host_required = result.host_required
 
 func save_settings():
 	print("[LUCY] Saving settings")
@@ -124,7 +153,8 @@ func save_settings():
 		"frame_packets": frame_packets,
 		"bulk_packets": bulk_packets,
 		"bulk_interval": bulk_interval,
-		"full_interval": full_interval
+		"full_interval": full_interval,
+		"host_required": host_required
 	}
 	var file = File.new()
 	if file.open(OS.get_executable_path().get_base_dir().plus_file("GDWeave/configs/LucysTools.json"),File.WRITE) == OK:

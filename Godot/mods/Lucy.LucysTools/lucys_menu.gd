@@ -12,9 +12,20 @@ func setup(manager):
 	get_node("%lucy_bpackets").value = manager.bulk_packets
 	get_node("%lucy_binterval").value = manager.bulk_interval
 	get_node("%lucy_finterval").value = manager.full_interval
+	
+	update()
+
+func update():
+	get_node("%lucy_srv_allow_bbcode").text = "Yes" if MANAGER.srv_allow_bbcode else "No"
 
 func _ready():
 	print("[LUCY] Menu Ready")
+	
+	get_node("%lucy_bbcode").disabled = MANAGER.host_required and not Network.GAME_MASTER 
+	get_node("%lucy_raincloud").disabled = (MANAGER.host_required and not Network.GAME_MASTER) or not MANAGER.ingame
+	get_node("%lucy_meteor").disabled = (MANAGER.host_required and not Network.GAME_MASTER) or not MANAGER.ingame
+	get_node("%lucy_freezerain").disabled = (MANAGER.host_required and not Network.GAME_MASTER) or not MANAGER.ingame
+	get_node("%lucy_clearrain").disabled = (MANAGER.host_required and not Network.GAME_MASTER) or not MANAGER.ingame
 
 func _input(event):
 	if event is InputEventKey and event.scancode == KEY_F5 && event.pressed:
@@ -83,4 +94,7 @@ func _on_lucy_clearrain_pressed():
 	for cloud in get_tree().get_nodes_in_group("raincloud"):
 		cloud._deinstantiate(true)
 
-
+func _on_lucy_clearchat_pressed():
+	Network.GAMECHAT = ""
+	Network.LOCAL_GAMECHAT = ""
+	Network.emit_signal("_chat_update")
