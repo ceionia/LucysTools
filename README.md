@@ -7,6 +7,7 @@ Client Features:
 - Optionally knocks people back when they punch you.
 - Lets you clear gamechat
 - Sends messages on P2P channel 2 (This should make your messages more reliable for users who don't have LucysTools)
+- Only the game host can kick/ban you
 
 Host Features:
 - Lets you set a custom server name and message that will be sent when someone joins.
