@@ -171,7 +171,7 @@ public class LucysChatChanges : IScriptMod
         // C# is too rusty
         foreach (var token in tokens) {
             var had_change = false;
-            foreach ((var change, var waiter) in pending_changes) {
+            foreach (var (change, waiter) in pending_changes) {
                 if (waiter.Check(token)) {
                     Mod.ModInterface.Logger.Information($"Adding Lucy Chat mod {change.name}");
 
@@ -218,24 +218,19 @@ public class LucysNetFixes : IScriptMod {
         new CodeChange {
             name = "instance_actor",
             // "instance_actor":
-            //     emit_signal("_instance_actor", DATA["params"] END
+            //     END
             multitoken_prefix = new Func<Token, bool>[] {
                 t => t is ConstantToken {Value:StringVariant{Value: "instance_actor"}},
                 t => t.Type == TokenType.Colon,
                 t => t.Type == TokenType.Newline,
-                t => t is IdentifierToken {Name: "emit_signal"},
-                t => t.Type == TokenType.ParenthesisOpen,
-                t => t.Type == TokenType.Constant,
-                t => t.Type == TokenType.Comma,
-                t => t.Type == TokenType.Identifier,
-                t => t.Type == TokenType.BracketOpen,
-                t => t.Type == TokenType.Constant,
-                t => t.Type == TokenType.BracketClose,
             },
-            // , packet_sender END
+            //     LUCY_INSTANCE_SENDER = packet_sender
+            //     END
             code_to_add = new Token[] {
-                new Token(TokenType.Comma),
+                new IdentifierToken("LUCY_INSTANCE_SENDER"),
+                new Token(TokenType.OpAssign),
                 new IdentifierToken("packet_sender"),
+                new Token(TokenType.Newline, 4),
             }
         },
 
@@ -691,6 +686,7 @@ public class LucysNetFixes : IScriptMod {
             // var LUCY_CHAT_BBCODE = false
             // var LUCY_SRV_NAME = ""
             // var LUCY_PUNCHED_ME = 0
+            // var LUCY_INSTANCE_SENDER = 0
             // END
             code_to_add = new Token[] {
                 new Token(TokenType.PrVar),
@@ -743,6 +739,12 @@ public class LucysNetFixes : IScriptMod {
 
                 new Token(TokenType.PrVar),
                 new IdentifierToken("LUCY_PUNCHED_ME"),
+                new Token(TokenType.OpAssign),
+                new ConstantToken(new IntVariant(0)),
+                new Token(TokenType.Newline, 0),
+
+                new Token(TokenType.PrVar),
+                new IdentifierToken("LUCY_INSTANCE_SENDER"),
                 new Token(TokenType.OpAssign),
                 new ConstantToken(new IntVariant(0)),
                 new Token(TokenType.Newline, 0),
@@ -820,7 +822,7 @@ public class LucysNetFixes : IScriptMod {
         // C# is too rusty
         foreach (var token in tokens) {
             var had_change = false;
-            foreach ((var change, var waiter) in pending_changes) {
+            foreach (var (change, waiter) in pending_changes) {
                 if (waiter.Check(token)) {
                     Mod.ModInterface.Logger.Information($"Adding Lucy Network mod {change.name}");
 

@@ -77,9 +77,11 @@ func send_server_sync_actor(to = "peers"):
 	}}
 	Network._send_P2P_Packet({"type": "instance_actor", "params": dict}, to, 2)
 
-func _instance_actor(dict, sender_id):
+func _instance_actor(dict):
 	if dict["actor_type"] != "lucy_fake_actor": return
-	if sender_id != Network.KNOWN_GAME_MASTER or Network.GAME_MASTER: return
+	var sender = Network.LUCY_INSTANCE_SENDER
+	Network.LUCY_INSTANCE_SENDER = 0
+	if sender != Network.KNOWN_GAME_MASTER or Network.GAME_MASTER: return
 	var data = dict["data"]
 	self.srv_allow_bbcode = data["allow_bbcode"]
 
