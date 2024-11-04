@@ -16,7 +16,12 @@ var bulk_packets = 200 setget set_bulk_packets
 var bulk_interval = 1 setget set_bulk_interval
 var full_interval = 5 setget set_full_interval
 
+var custom_color_enabled = false setget set_custom_color_enabled
+var custom_color = Color("009cd0") setget set_custom_color
+
 var srv_allow_bbcode = false setget set_srv_bbcode
+
+var log_messages = false setget set_log_messages
 
 # Patched Network vars
 # var LUCY_PACKETS_READ = 0
@@ -28,8 +33,16 @@ var srv_allow_bbcode = false setget set_srv_bbcode
 # var LUCY_CHAT_BBCODE
 # var LUCY_SRV_NAME
 # var LUCY_PUNCHED_ME
+# var LUCY_INSTANCE_SENDER
+# var LUCY_CUSTOM_COLOR_B
+# var LUCY_CUSTOM_COLOR
+# var LUCY_LOG_MESSAGES
 
 var ingame = false
+
+func set_log_messages(val):
+	log_messages = val
+	Network.LUCY_LOG_MESSAGES = val
 
 func set_punchback(punchback):
 	do_punchback = punchback
@@ -60,6 +73,13 @@ func set_full_interval(val):
 	full_interval = val
 	Network.LUCY_BULK_FULL_INTERVAL = val
 	Network.LUCY_BULK_FULL_TIMER = 0
+func set_custom_color_enabled(val):
+	custom_color_enabled = val
+	Network.LUCY_CUSTOM_COLOR_B = val
+func set_custom_color(val):
+	custom_color = Color(val)
+	custom_color.a = 1
+	Network.LUCY_CUSTOM_COLOR = Color(custom_color) if Color(custom_color) != Color("d5aa73") else Color("739ed5")
 
 func _ready():
 	print("[LUCY] Loaded LucysTools")
@@ -127,6 +147,15 @@ func _on_enter(node: Node):
 		self.allow_bbcode = allow_bbcode
 		lucys_menu.setup(self)
 
+const save_keys = [
+	"do_punchback", "allow_bbcode",
+	"custom_server_name", "server_join_message",
+	"frame_packets", "bulk_packets",
+	"bulk_interval", "full_interval",
+	"custom_color_enabled", "custom_color",
+	"log_messages"
+]
+
 func load_settings():
 	print("[LUCY] Loading settings")
 	var file = File.new()
@@ -135,29 +164,18 @@ func load_settings():
 		file.close()
 		var result = parse.result
 		# trigger setters
-		self.do_punchback = result.do_punchback
-		self.allow_bbcode = result.allow_bbcode
-		self.custom_server_name = result.custom_server_name
-		self.server_join_message = result.server_join_message
-		self.frame_packets = result.frame_packets
-		self.bulk_packets = result.bulk_packets
-		self.bulk_interval = result.bulk_interval
-		self.full_interval = result.full_interval
-		self.host_required = result.host_required
+		for key in result.keys():
+			if key in save_keys: self[key] = result[key]
 
 func save_settings():
 	print("[LUCY] Saving settings")
-	var settings = {
-		"do_punchback": do_punchback,
-		"allow_bbcode": allow_bbcode,
-		"custom_server_name": custom_server_name,
-		"server_join_message": server_join_message,
-		"frame_packets": frame_packets,
-		"bulk_packets": bulk_packets,
-		"bulk_interval": bulk_interval,
-		"full_interval": full_interval,
-		"host_required": host_required
-	}
+	
+	custom_color = Color(custom_color).to_html()
+	
+	var settings = {}
+	for key in save_keys:
+		settings[key] = self[key]
+	
 	var file = File.new()
 	if file.open(OS.get_executable_path().get_base_dir().plus_file("GDWeave/configs/LucysTools.json"),File.WRITE) == OK:
 		file.store_string(JSON.print(settings))

@@ -158,6 +158,46 @@ public class LucysChatChanges : IScriptMod
                 new ConstantToken(new BoolVariant(false)),
             }
         },
+
+        new CodeChange {
+            name = "custom chat color support",
+            // var final_color = Color(color) * Color(0.95, 0.9, 0.9)
+            // END
+            multitoken_prefix = new Func<Token, bool>[] {
+                t => t.Type == TokenType.PrVar,
+                t => t is IdentifierToken {Name: "final_color"},
+                t => t.Type == TokenType.OpAssign,
+                t => t.Type == TokenType.BuiltInType && t.AssociatedData == (uint)VariantType.Color,
+                t => t.Type == TokenType.ParenthesisOpen,
+                t => t is IdentifierToken {Name: "color"},
+                t => t.Type == TokenType.ParenthesisClose,
+                t => t.Type == TokenType.OpMul,
+                t => t.Type == TokenType.BuiltInType && t.AssociatedData == (uint)VariantType.Color,
+                t => t.Type == TokenType.ParenthesisOpen,
+                t => t is ConstantToken,
+                t => t.Type == TokenType.Comma,
+                t => t is ConstantToken,
+                t => t.Type == TokenType.Comma,
+                t => t is ConstantToken,
+                t => t.Type == TokenType.ParenthesisClose,
+                t => t.Type == TokenType.Newline,
+            },
+            // if Network.LUCY_CUSTOM_COLOR_B: final_color = LUCY_CUSTOM_COLOR
+            // END
+            code_to_add = new Token[] {
+                new Token(TokenType.CfIf),
+                new IdentifierToken("Network"),
+                new Token(TokenType.Period),
+                new IdentifierToken("LUCY_CUSTOM_COLOR_B"),
+                new Token(TokenType.Colon),
+                new IdentifierToken("final_color"),
+                new Token(TokenType.OpAssign),
+                new IdentifierToken("Network"),
+                new Token(TokenType.Period),
+                new IdentifierToken("LUCY_CUSTOM_COLOR"),
+                new Token(TokenType.Newline, 1),
+            }
+        },
     };
 
     IEnumerable<Token> IScriptMod.Modify(string path, IEnumerable<Token> tokens)
@@ -243,14 +283,28 @@ public class LucysNetFixes : IScriptMod {
                 t => t.Type == TokenType.Colon,
                 t => t.Type == TokenType.Newline
             },
-            // print("[KICK]")
+            // if LUCY_LOG_MESSAGES: print("[KICK from", _get_username_from_id(packet_sender), " (", packet_sender, ")]")
             // if GAME_MASTER: return
             // if packet_sender != KNOWN_GAME_MASTER: return
             // END
             code_to_add = new Token[] {
+                new Token(TokenType.CfIf),
+                new IdentifierToken("LUCY_LOG_MESSAGES"),
+                new Token(TokenType.Colon),
                 new Token(TokenType.BuiltInFunc, (uint)BuiltinFunction.TextPrint),
                 new Token(TokenType.ParenthesisOpen),
-                new ConstantToken(new StringVariant("[KICK]")),
+                new ConstantToken(new StringVariant("[KICK from ")),
+                new Token(TokenType.Comma),
+                new IdentifierToken("_get_username_from_id"),
+                new Token(TokenType.ParenthesisOpen),
+                new IdentifierToken("packet_sender"),
+                new Token(TokenType.ParenthesisClose),
+                new Token(TokenType.Comma),
+                new ConstantToken(new StringVariant(" (")),
+                new Token(TokenType.Comma),
+                new IdentifierToken("packet_sender"),
+                new Token(TokenType.Comma),
+                new ConstantToken(new StringVariant(")]")),
                 new Token(TokenType.ParenthesisClose),
                 new Token(TokenType.Newline, 4),
 
@@ -279,14 +333,28 @@ public class LucysNetFixes : IScriptMod {
                 t => t.Type == TokenType.Colon,
                 t => t.Type == TokenType.Newline
             },
-            // print("[BAN]")
+            // if LUCY_LOG_MESSAGES: print("[BAN from", _get_username_from_id(packet_sender), " (", packet_sender, ")]")
             // if GAME_MASTER: return
             // if packet_sender != KNOWN_GAME_MASTER: return
             // END
             code_to_add = new Token[] {
+                new Token(TokenType.CfIf),
+                new IdentifierToken("LUCY_LOG_MESSAGES"),
+                new Token(TokenType.Colon),
                 new Token(TokenType.BuiltInFunc, (uint)BuiltinFunction.TextPrint),
                 new Token(TokenType.ParenthesisOpen),
-                new ConstantToken(new StringVariant("[BAN]")),
+                new ConstantToken(new StringVariant("[BAN from ")),
+                new Token(TokenType.Comma),
+                new IdentifierToken("_get_username_from_id"),
+                new Token(TokenType.ParenthesisOpen),
+                new IdentifierToken("packet_sender"),
+                new Token(TokenType.ParenthesisClose),
+                new Token(TokenType.Comma),
+                new ConstantToken(new StringVariant(" (")),
+                new Token(TokenType.Comma),
+                new IdentifierToken("packet_sender"),
+                new Token(TokenType.Comma),
+                new ConstantToken(new StringVariant(")]")),
                 new Token(TokenType.ParenthesisClose),
                 new Token(TokenType.Newline, 4),
 
@@ -343,8 +411,11 @@ public class LucysNetFixes : IScriptMod {
                 t => t.Type == TokenType.Colon,
                 t => t.Type == TokenType.Newline
             },
-            // print("[msg ", _get_username_from_id(packet_sender), "] ", DATA.message)
+            // if LUCY_LOG_MESSAGES: print("[msg ", _get_username_from_id(packet_sender), "] ", DATA.message)
             code_to_add = new Token[] {
+                new Token(TokenType.CfIf),
+                new IdentifierToken("LUCY_LOG_MESSAGES"),
+                new Token(TokenType.Colon),
                 new Token(TokenType.BuiltInFunc, (uint)BuiltinFunction.TextPrint),
                 new Token(TokenType.ParenthesisOpen),
                 new ConstantToken(new StringVariant("[msg ")),
@@ -354,7 +425,11 @@ public class LucysNetFixes : IScriptMod {
                 new IdentifierToken("packet_sender"),
                 new Token(TokenType.ParenthesisClose),
                 new Token(TokenType.Comma),
-                new ConstantToken(new StringVariant("] ")),
+                new ConstantToken(new StringVariant(" (")),
+                new Token(TokenType.Comma),
+                new IdentifierToken("packet_sender"),
+                new Token(TokenType.Comma),
+                new ConstantToken(new StringVariant(")] ")),
                 new Token(TokenType.Comma),
                 new IdentifierToken("DATA"),
                 new Token(TokenType.Period),
@@ -687,6 +762,9 @@ public class LucysNetFixes : IScriptMod {
             // var LUCY_SRV_NAME = ""
             // var LUCY_PUNCHED_ME = 0
             // var LUCY_INSTANCE_SENDER = 0
+            // var LUCY_CUSTOM_COLOR_B = false
+            // var LUCY_CUSTOM_COLOR = 0
+            // var LUCY_LOG_MESSAGES = false
             // END
             code_to_add = new Token[] {
                 new Token(TokenType.PrVar),
@@ -747,6 +825,24 @@ public class LucysNetFixes : IScriptMod {
                 new IdentifierToken("LUCY_INSTANCE_SENDER"),
                 new Token(TokenType.OpAssign),
                 new ConstantToken(new IntVariant(0)),
+                new Token(TokenType.Newline, 0),
+
+                new Token(TokenType.PrVar),
+                new IdentifierToken("LUCY_CUSTOM_COLOR_B"),
+                new Token(TokenType.OpAssign),
+                new ConstantToken(new BoolVariant(false)),
+                new Token(TokenType.Newline, 0),
+
+                new Token(TokenType.PrVar),
+                new IdentifierToken("LUCY_CUSTOM_COLOR"),
+                new Token(TokenType.OpAssign),
+                new ConstantToken(new IntVariant(0)),
+                new Token(TokenType.Newline, 0),
+
+                new Token(TokenType.PrVar),
+                new IdentifierToken("LUCY_LOG_MESSAGES"),
+                new Token(TokenType.OpAssign),
+                new ConstantToken(new BoolVariant(false)),
                 new Token(TokenType.Newline, 0),
             }
         },
