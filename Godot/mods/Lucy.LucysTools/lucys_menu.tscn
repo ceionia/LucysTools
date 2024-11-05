@@ -36,27 +36,40 @@ rect_pivot_offset = Vector2( -141, -49 )
 
 [node name="Label" type="Label" parent="PanelContainer/VBoxContainer/HFlowContainer"]
 margin_top = 13.0
-margin_right = 286.0
+margin_right = 138.0
 margin_bottom = 27.0
-text = "Allow BBCode in Chat (start message with %)"
+text = "Allow BBCode (Client)"
 
 [node name="lucy_bbcode" type="CheckButton" parent="PanelContainer/VBoxContainer/HFlowContainer"]
 unique_name_in_owner = true
-margin_left = 290.0
-margin_right = 366.0
+margin_left = 142.0
+margin_right = 218.0
+margin_bottom = 40.0
+
+[node name="Label3" type="Label" parent="PanelContainer/VBoxContainer/HFlowContainer"]
+margin_left = 222.0
+margin_top = 13.0
+margin_right = 471.0
+margin_bottom = 27.0
+text = "Allow Intrusive BBCode (requires Host)"
+
+[node name="lucy_intbbcode" type="CheckButton" parent="PanelContainer/VBoxContainer/HFlowContainer"]
+unique_name_in_owner = true
+margin_left = 475.0
+margin_right = 551.0
 margin_bottom = 40.0
 
 [node name="Label2" type="Label" parent="PanelContainer/VBoxContainer/HFlowContainer"]
-margin_left = 370.0
+margin_left = 555.0
 margin_top = 13.0
-margin_right = 505.0
+margin_right = 690.0
 margin_bottom = 27.0
 text = "Punch back on Punch"
 
 [node name="lucy_punchback" type="CheckButton" parent="PanelContainer/VBoxContainer/HFlowContainer"]
 unique_name_in_owner = true
-margin_left = 509.0
-margin_right = 585.0
+margin_left = 694.0
+margin_right = 770.0
 margin_bottom = 40.0
 
 [node name="HFlowContainer3" type="HFlowContainer" parent="PanelContainer/VBoxContainer"]
@@ -66,14 +79,14 @@ margin_bottom = 84.0
 rect_pivot_offset = Vector2( -141, -49 )
 
 [node name="Label" type="Label" parent="PanelContainer/VBoxContainer/HFlowContainer3"]
-margin_right = 196.0
+margin_right = 199.0
 margin_bottom = 14.0
-text = "Server Allows BBCode in Chat: "
+text = "Host Allows Intrusive BBCode: "
 
 [node name="lucy_srv_allow_bbcode" type="Label" parent="PanelContainer/VBoxContainer/HFlowContainer3"]
 unique_name_in_owner = true
-margin_left = 200.0
-margin_right = 218.0
+margin_left = 203.0
+margin_right = 221.0
 margin_bottom = 14.0
 text = "No"
 
@@ -203,10 +216,51 @@ margin_bottom = 24.0
 rect_min_size = Vector2( 42, 0 )
 edit_alpha = false
 
-[node name="HFlowContainer2" type="HFlowContainer" parent="PanelContainer/VBoxContainer"]
+[node name="HFlowContainer9" type="HFlowContainer" parent="PanelContainer/VBoxContainer"]
 margin_top = 232.0
 margin_right = 786.0
-margin_bottom = 252.0
+margin_bottom = 256.0
+rect_pivot_offset = Vector2( -141, -49 )
+hint_tooltip = "Must match Steam username"
+
+[node name="Label" type="Label" parent="PanelContainer/VBoxContainer/HFlowContainer9"]
+margin_top = 5.0
+margin_right = 91.0
+margin_bottom = 19.0
+text = "Custom Name"
+
+[node name="lucy_namegood" type="RichTextLabel" parent="PanelContainer/VBoxContainer/HFlowContainer9"]
+unique_name_in_owner = true
+margin_left = 95.0
+margin_right = 145.0
+margin_bottom = 24.0
+rect_min_size = Vector2( 50, 0 )
+bbcode_enabled = true
+bbcode_text = "[color=green]Good[/color]"
+text = "Good"
+scroll_active = false
+
+[node name="lucy_name" type="LineEdit" parent="PanelContainer/VBoxContainer/HFlowContainer9"]
+unique_name_in_owner = true
+margin_left = 149.0
+margin_right = 207.0
+margin_bottom = 24.0
+expand_to_text_length = true
+placeholder_text = "Name"
+
+[node name="lucy_name_preview" type="RichTextLabel" parent="PanelContainer/VBoxContainer/HFlowContainer9"]
+unique_name_in_owner = true
+margin_left = 211.0
+margin_right = 786.0
+margin_bottom = 24.0
+size_flags_horizontal = 3
+bbcode_enabled = true
+scroll_active = false
+
+[node name="HFlowContainer2" type="HFlowContainer" parent="PanelContainer/VBoxContainer"]
+margin_top = 260.0
+margin_right = 786.0
+margin_bottom = 280.0
 
 [node name="lucy_clearchat" type="Button" parent="PanelContainer/VBoxContainer/HFlowContainer2"]
 margin_right = 76.0
@@ -250,14 +304,14 @@ margin_bottom = 20.0
 text = "Clear Meteor"
 
 [node name="HSeparator2" type="HSeparator" parent="PanelContainer/VBoxContainer"]
-margin_top = 256.0
-margin_right = 786.0
-margin_bottom = 260.0
-
-[node name="HSplitContainer" type="HSplitContainer" parent="PanelContainer/VBoxContainer"]
-margin_top = 264.0
+margin_top = 284.0
 margin_right = 786.0
 margin_bottom = 288.0
+
+[node name="HSplitContainer" type="HSplitContainer" parent="PanelContainer/VBoxContainer"]
+margin_top = 292.0
+margin_right = 786.0
+margin_bottom = 316.0
 split_offset = 100
 
 [node name="HFlowContainer3" type="HFlowContainer" parent="PanelContainer/VBoxContainer/HSplitContainer"]
@@ -302,9 +356,9 @@ rounded = true
 allow_greater = true
 
 [node name="HSplitContainer2" type="HSplitContainer" parent="PanelContainer/VBoxContainer"]
-margin_top = 292.0
+margin_top = 320.0
 margin_right = 786.0
-margin_bottom = 316.0
+margin_bottom = 344.0
 split_offset = 100
 
 [node name="HFlowContainer3" type="HFlowContainer" parent="PanelContainer/VBoxContainer/HSplitContainer2"]
@@ -349,11 +403,13 @@ value = 6.4
 allow_greater = true
 
 [connection signal="toggled" from="PanelContainer/VBoxContainer/HFlowContainer/lucy_bbcode" to="." method="_on_lucy_bbcode_toggled"]
+[connection signal="toggled" from="PanelContainer/VBoxContainer/HFlowContainer/lucy_intbbcode" to="." method="_on_lucy_intbbcode_toggled"]
 [connection signal="toggled" from="PanelContainer/VBoxContainer/HFlowContainer/lucy_punchback" to="." method="_on_lucy_punchback_toggled"]
 [connection signal="text_changed" from="PanelContainer/VBoxContainer/HFlowContainer4/lucy_servername" to="." method="_on_lucy_servername_text_changed"]
 [connection signal="text_changed" from="PanelContainer/VBoxContainer/HFlowContainer5/lucy_servermsg" to="." method="_on_lucy_servermsg_text_changed"]
 [connection signal="toggled" from="PanelContainer/VBoxContainer/HFlowContainer8/lucy_chatcolor_bool" to="." method="_on_lucy_chatcolor_bool_toggled"]
 [connection signal="color_changed" from="PanelContainer/VBoxContainer/HFlowContainer8/lucy_chatcolor" to="." method="_on_lucy_chatcolor_color_changed"]
+[connection signal="text_changed" from="PanelContainer/VBoxContainer/HFlowContainer9/lucy_name" to="." method="_on_lucy_name_text_changed"]
 [connection signal="pressed" from="PanelContainer/VBoxContainer/HFlowContainer2/lucy_clearchat" to="." method="_on_lucy_clearchat_pressed"]
 [connection signal="pressed" from="PanelContainer/VBoxContainer/HFlowContainer2/lucy_raincloud" to="." method="_on_lucy_raincloud_pressed"]
 [connection signal="pressed" from="PanelContainer/VBoxContainer/HFlowContainer2/lucy_meteor" to="." method="_on_lucy_meteor_pressed"]

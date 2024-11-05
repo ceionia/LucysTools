@@ -31,64 +31,8 @@ public class LucysChatChanges : IScriptMod
 
     CodeChange[] changes = {
         new CodeChange {
-            name = "_send_message literal input",
-            // func _send_message(text):
-            //     END
-            multitoken_prefix = new Func<Token, bool>[] {
-                t => t.Type == TokenType.PrFunction,
-                t => t is IdentifierToken {Name: "_send_message"},
-                t => t.Type == TokenType.ParenthesisOpen,
-                t => t.Type == TokenType.Identifier,
-                t => t.Type == TokenType.ParenthesisClose,
-                t => t.Type == TokenType.Colon,
-                t => t.Type == TokenType.Newline,
-            },
-            //     if text.begins_with('%') and Network.LUCY_CHAT_BBCODE):
-            //         text = text.trim_prefix('%')
-            //         Network._send_message(text, chat_local)
-            //         return
-            //     END
-            code_to_add = new Token[] {
-                new Token(TokenType.CfIf),
-                new IdentifierToken("text"),
-                new Token(TokenType.Period),
-                new IdentifierToken("begins_with"),
-                new Token(TokenType.ParenthesisOpen),
-                new ConstantToken(new StringVariant("%")),
-                new Token(TokenType.ParenthesisClose),
-                new Token(TokenType.OpAnd),
-                new IdentifierToken("Network"),
-                new Token(TokenType.Period),
-                new IdentifierToken("LUCY_CHAT_BBCODE"),
-                new Token(TokenType.Colon),
-                new Token(TokenType.Newline,2),
-                new IdentifierToken("text"),
-                new Token(TokenType.OpAssign),
-                new IdentifierToken("text"),
-                new Token(TokenType.Period),
-                new IdentifierToken("trim_prefix"),
-                new Token(TokenType.ParenthesisOpen),
-                new ConstantToken(new StringVariant("%")),
-                new Token(TokenType.ParenthesisClose),
-                new Token(TokenType.Newline,2),
-                new IdentifierToken("Network"),
-                new Token(TokenType.Period),
-                new IdentifierToken("_send_message"),
-                new Token(TokenType.ParenthesisOpen),
-                new IdentifierToken("text"),
-                new Token(TokenType.Comma),
-                new IdentifierToken("chat_local"),
-                new Token(TokenType.ParenthesisClose),
-                new Token(TokenType.Newline,2),
-                new Token(TokenType.CfReturn),
-                new Token(TokenType.Newline,1),
-            }
-        },
-
-        new CodeChange {
-            name = "[ filter",
+            name = "save lit text",
             // color.to_html()
-            //
             //
             // END
             multitoken_prefix = new Func<Token, bool>[] {
@@ -99,102 +43,81 @@ public class LucysChatChanges : IScriptMod
                 t => t.Type == TokenType.ParenthesisClose,
                 t => t.Type == TokenType.Newline,
                 t => t.Type == TokenType.Newline,
-                t => t.Type == TokenType.Newline,
             },
-            // if not Network.LUCY_CHAT_BBCODE: END
+            // var lit_text = text
             code_to_add = new Token[] {
-                new Token(TokenType.CfIf),
-                new Token(TokenType.OpNot),
-                new IdentifierToken("Network"),
-                new Token(TokenType.Period),
-                new IdentifierToken("LUCY_CHAT_BBCODE"),
-                new Token(TokenType.Colon),
-            }
-        },
-
-        new CodeChange {
-            name = "] filter",
-            // text = text.replace('[','')
-            // END
-            multitoken_prefix = new Func<Token, bool>[] {
-                t => t is IdentifierToken {Name: "text"},
-                t => t.Type == TokenType.OpAssign,
-                t => t is IdentifierToken {Name: "text"},
-                t => t.Type == TokenType.Period,
-                t => t is IdentifierToken {Name: "replace"},
-                t => t.Type == TokenType.ParenthesisOpen,
-                t => t is ConstantToken {Value:StringVariant{Value: "["}},
-                t => t.Type == TokenType.Comma,
-                t => t.Type == TokenType.Constant,
-                t => t.Type == TokenType.ParenthesisClose,
-                t => t.Type == TokenType.Newline,
-            },
-            // if not Network.LUCY_CHAT_BBCODE: END
-            code_to_add = new Token[] {
-                new Token(TokenType.CfIf),
-                new Token(TokenType.OpNot),
-                new IdentifierToken("Network"),
-                new Token(TokenType.Period),
-                new IdentifierToken("LUCY_CHAT_BBCODE"),
-                new Token(TokenType.Colon),
-            }
-        },
-
-        new CodeChange {
-            name = "breakdown [ filter",
-            // elif line.begins_with('[') END
-            multitoken_prefix = new Func<Token, bool>[] {
-                t => t.Type == TokenType.CfElif,
-                t => t is IdentifierToken {Name: "line"},
-                t => t.Type == TokenType.Period,
-                t => t is IdentifierToken {Name: "begins_with"},
-                t => t.Type == TokenType.ParenthesisOpen,
-                t => t is ConstantToken {Value:StringVariant{Value: "["}},
-                t => t.Type == TokenType.ParenthesisClose,
-            },
-            // and false END
-            code_to_add = new Token[] {
-                new Token(TokenType.OpAnd),
-                new ConstantToken(new BoolVariant(false)),
-            }
-        },
-
-        new CodeChange {
-            name = "custom chat color support",
-            // var final_color = Color(color) * Color(0.95, 0.9, 0.9)
-            // END
-            multitoken_prefix = new Func<Token, bool>[] {
-                t => t.Type == TokenType.PrVar,
-                t => t is IdentifierToken {Name: "final_color"},
-                t => t.Type == TokenType.OpAssign,
-                t => t.Type == TokenType.BuiltInType && t.AssociatedData == (uint)VariantType.Color,
-                t => t.Type == TokenType.ParenthesisOpen,
-                t => t is IdentifierToken {Name: "color"},
-                t => t.Type == TokenType.ParenthesisClose,
-                t => t.Type == TokenType.OpMul,
-                t => t.Type == TokenType.BuiltInType && t.AssociatedData == (uint)VariantType.Color,
-                t => t.Type == TokenType.ParenthesisOpen,
-                t => t is ConstantToken,
-                t => t.Type == TokenType.Comma,
-                t => t is ConstantToken,
-                t => t.Type == TokenType.Comma,
-                t => t is ConstantToken,
-                t => t.Type == TokenType.ParenthesisClose,
-                t => t.Type == TokenType.Newline,
-            },
-            // if Network.LUCY_CUSTOM_COLOR_B: final_color = LUCY_CUSTOM_COLOR
-            // END
-            code_to_add = new Token[] {
-                new Token(TokenType.CfIf),
-                new IdentifierToken("Network"),
-                new Token(TokenType.Period),
-                new IdentifierToken("LUCY_CUSTOM_COLOR_B"),
-                new Token(TokenType.Colon),
-                new IdentifierToken("final_color"),
+                new Token(TokenType.PrVar),
+                new IdentifierToken("lit_text"),
                 new Token(TokenType.OpAssign),
-                new IdentifierToken("Network"),
+                new IdentifierToken("text"),
+                new Token(TokenType.Newline, 1),
+            }
+        },
+
+        new CodeChange {
+            name = "chat bbcode",
+            // endcap + final_text + suffix
+            // END
+            multitoken_prefix = new Func<Token, bool>[] {
+                t => t is IdentifierToken {Name: "endcap"},
+                t => t.Type == TokenType.OpAdd,
+                t => t is IdentifierToken {Name: "final_text"},
+                t => t.Type == TokenType.OpAdd,
+                t => t is IdentifierToken {Name: "suffix"},
+                t => t.Type == TokenType.Newline,
+            },
+            // if $"/root/LucyLucysTools":
+            //     var tmp = $"/root/LucyLucysTools".process_message(lit_text, final_text, prefix, suffix, endcap, username, spoken_text)
+            //     final = tmp[0]
+            //     spoken_text = tmp[1]
+            // END
+            code_to_add = new Token[] {
+                new Token(TokenType.CfIf),
+                new Token(TokenType.Dollar),
+                new ConstantToken(new StringVariant("/root/LucyLucysTools")),
+                new Token(TokenType.Colon),
+                new Token(TokenType.Newline, 2),
+
+                new Token(TokenType.PrVar),
+                new IdentifierToken("tmp"),
+                new Token(TokenType.OpAssign),
+                new Token(TokenType.Dollar),
+                new ConstantToken(new StringVariant("/root/LucyLucysTools")),
                 new Token(TokenType.Period),
-                new IdentifierToken("LUCY_CUSTOM_COLOR"),
+                new IdentifierToken("process_message"),
+                new Token(TokenType.ParenthesisOpen),
+                new IdentifierToken("lit_text"),
+                new Token(TokenType.Comma),
+                new IdentifierToken("final_text"),
+                new Token(TokenType.Comma),
+                new IdentifierToken("prefix"),
+                new Token(TokenType.Comma),
+                new IdentifierToken("suffix"),
+                new Token(TokenType.Comma),
+                new IdentifierToken("endcap"),
+                new Token(TokenType.Comma),
+                new IdentifierToken("username"),
+                new Token(TokenType.Comma),
+                new IdentifierToken("final_color"),
+                new Token(TokenType.Comma),
+                new IdentifierToken("spoken_text"),
+                new Token(TokenType.ParenthesisClose),
+                new Token(TokenType.Newline, 2),
+
+                new IdentifierToken("final"),
+                new Token(TokenType.OpAssign),
+                new IdentifierToken("tmp"),
+                new Token(TokenType.BracketOpen),
+                new ConstantToken(new IntVariant(0)),
+                new Token(TokenType.BracketClose),
+                new Token(TokenType.Newline, 2),
+
+                new IdentifierToken("spoken_text"),
+                new Token(TokenType.OpAssign),
+                new IdentifierToken("tmp"),
+                new Token(TokenType.BracketOpen),
+                new ConstantToken(new IntVariant(1)),
+                new Token(TokenType.BracketClose),
                 new Token(TokenType.Newline, 1),
             }
         },
@@ -758,12 +681,9 @@ public class LucysNetFixes : IScriptMod {
             // var LUCY_BULK_PACKETS = 128
             // var LUCY_BULK_INTERVAL = 0.8
             // var LUCY_BULK_FULL_INTERVAL = 6.4
-            // var LUCY_CHAT_BBCODE = false
             // var LUCY_SRV_NAME = ""
             // var LUCY_PUNCHED_ME = 0
             // var LUCY_INSTANCE_SENDER = 0
-            // var LUCY_CUSTOM_COLOR_B = false
-            // var LUCY_CUSTOM_COLOR = 0
             // var LUCY_LOG_MESSAGES = false
             // END
             code_to_add = new Token[] {
@@ -804,12 +724,6 @@ public class LucysNetFixes : IScriptMod {
                 new Token(TokenType.Newline, 0),
 
                 new Token(TokenType.PrVar),
-                new IdentifierToken("LUCY_CHAT_BBCODE"),
-                new Token(TokenType.OpAssign),
-                new ConstantToken(new BoolVariant(false)),
-                new Token(TokenType.Newline, 0),
-
-                new Token(TokenType.PrVar),
                 new IdentifierToken("LUCY_SRV_NAME"),
                 new Token(TokenType.OpAssign),
                 new ConstantToken(new StringVariant("")),
@@ -823,18 +737,6 @@ public class LucysNetFixes : IScriptMod {
 
                 new Token(TokenType.PrVar),
                 new IdentifierToken("LUCY_INSTANCE_SENDER"),
-                new Token(TokenType.OpAssign),
-                new ConstantToken(new IntVariant(0)),
-                new Token(TokenType.Newline, 0),
-
-                new Token(TokenType.PrVar),
-                new IdentifierToken("LUCY_CUSTOM_COLOR_B"),
-                new Token(TokenType.OpAssign),
-                new ConstantToken(new BoolVariant(false)),
-                new Token(TokenType.Newline, 0),
-
-                new Token(TokenType.PrVar),
-                new IdentifierToken("LUCY_CUSTOM_COLOR"),
                 new Token(TokenType.OpAssign),
                 new ConstantToken(new IntVariant(0)),
                 new Token(TokenType.Newline, 0),

@@ -1,30 +1,52 @@
 extends Control
 
-var MANAGER = null
+var MANAGER
 
-func setup(manager):
-	MANAGER = manager
-	get_node("%lucy_bbcode").pressed = manager.allow_bbcode
-	get_node("%lucy_punchback").pressed = manager.do_punchback
-	get_node("%lucy_servername").text = manager.custom_server_name
-	get_node("%lucy_servername_preview").bbcode_text = manager.custom_server_name + "'s Lobby"
-	get_node("%lucy_servermsg").text = manager.server_join_message
-	get_node("%lucy_servermsg_preview").bbcode_text = manager.server_join_message
-	get_node("%lucy_fpackets").value = manager.frame_packets
-	get_node("%lucy_bpackets").value = manager.bulk_packets
-	get_node("%lucy_binterval").value = manager.bulk_interval
-	get_node("%lucy_finterval").value = manager.full_interval
+func setup():
+	get_node("%lucy_bbcode").pressed = MANAGER.allow_bbcode
+	get_node("%lucy_punchback").pressed = MANAGER.do_punchback
+	get_node("%lucy_servername").text = MANAGER.custom_server_name
+	get_node("%lucy_servername_preview").bbcode_text = MANAGER.custom_server_name + "'s Lobby"
+	get_node("%lucy_servermsg").text = MANAGER.server_join_message
+	get_node("%lucy_servermsg_preview").bbcode_text = MANAGER.server_join_message
+	get_node("%lucy_fpackets").value = MANAGER.frame_packets
+	get_node("%lucy_bpackets").value = MANAGER.bulk_packets
+	get_node("%lucy_binterval").value = MANAGER.bulk_interval
+	get_node("%lucy_finterval").value = MANAGER.full_interval
 	
-	get_node("%lucy_chatcolor_bool").pressed = manager.custom_color_enabled
-	get_node("%lucy_chatcolor").color = Color(manager.custom_color)
+	get_node("%lucy_intbbcode").pressed = MANAGER.allow_intrusive_bbcode
+	
+	get_node("%lucy_chatcolor_bool").pressed = MANAGER.custom_color_enabled
+	get_node("%lucy_chatcolor").color = Color(MANAGER.custom_color)
+	
+	get_node("%lucy_name").text = MANAGER.custom_name
 	
 	update()
+	
 
 func update():
 	get_node("%lucy_srv_allow_bbcode").text = "Yes" if MANAGER.srv_allow_bbcode else "No"
+	_on_lucy_name_text_changed(MANAGER.custom_name)
+	
+
+func _on_lucy_name_text_changed(new_text):
+	var result = MANAGER.bbcode_process(new_text)
+	#print("[fin] ", result.fin)
+	#print("[tags] ", result.tags)
+	#print("[stripped] ", result.stripped)
+	
+	var lol_steam_username = Network.STEAM_USERNAME.replace("[", "").replace("]", "")
+	var good = result.stripped == lol_steam_username
+	get_node("%lucy_name_preview").bbcode_text = result.fin
+	get_node("%lucy_namegood").bbcode_text = "[color=green]Good[/color]" if good else "[color=red]Bad[/color]"
+	
+	MANAGER.custom_name_enabled = good
+	MANAGER.custom_name = result.fin
 
 func _ready():
 	print("[LUCY] Menu Ready")
+	
+	MANAGER = $"/root/LucyLucysTools"
 	
 	get_node("%lucy_bbcode").disabled = MANAGER.host_required and not Network.GAME_MASTER 
 	get_node("%lucy_raincloud").disabled = not Network.GAME_MASTER or not MANAGER.ingame
@@ -68,6 +90,8 @@ func _on_lucy_chatcolor_bool_toggled(button_pressed):
 	MANAGER.custom_color_enabled = button_pressed
 func _on_lucy_chatcolor_color_changed(color):
 	MANAGER.custom_color = color
+func _on_lucy_intbbcode_toggled(button_pressed):
+	MANAGER.allow_intrusive_bbcode = button_pressed
 
 func _on_lucy_raincloud_pressed():
 	if not MANAGER.ingame: return
