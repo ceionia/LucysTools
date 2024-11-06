@@ -17,3 +17,10 @@ initial release
 - log settings
 - custom color
 - server name & join message previews
+
+0.4
+----
+- bbcode filtering added
+- bbcode enabled globally
+- intrusive bbcode separated
+- custom name bbcode

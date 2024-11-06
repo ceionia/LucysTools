@@ -8,12 +8,14 @@ Client Features:
 - Lets you clear gamechat
 - Sends messages on P2P channel 2 (This should make your messages more reliable for users who don't have LucysTools)
 - Only the game host can kick/ban you
-- Allows changing your name's color in chat
+- Allows custom name bbcode (and/or custom color)
+- Allows some BBCode in chat: [b], [i], [u], [s], [color] Make sure to close your tags!
 
 Host Features:
 - Lets you set a custom server name and message that will be sent when someone joins.
 - Lets you spawn rainclouds & meteors.
-- Lets you do 'raw' messages & BBCode in messages. If enabled, other players on the server can use BBCode too. (Not secure or anything, implemented client side)
+- Lets you enable intrusive BBCode ([rainbow], [tornado], [shake], [wave], [font]) in messages. If enabled, other players on the server can use these too. (Not secure or anything, implemented client side)
+- If intrusive BBCode is enabled, 'raw' messages can be sent with a % prefix
 
 Log Features:
 - If you enable "log_messages" in the config file, messages, kicks, and bans will be logged to godot.log along with the user who sent the packet.
