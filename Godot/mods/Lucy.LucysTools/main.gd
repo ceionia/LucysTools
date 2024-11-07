@@ -97,7 +97,7 @@ func safe_message(user_id, color, boring_msg, local, lucy_user, lucy_msg):
 	var final_message = filter_message.replace("%u", "[color=#" + str(color) + "]" + username + "[/color]")
 	var thing = {"username":username, "color":color, "filter_message":filter_message,
 		"final_message":final_message,"lucy_user":lucy_user,"lucy_msg":lucy_msg}
-	print("FUCK2 ", thing)
+	#print("FUCK2 ", thing)
 	Network._update_chat(final_message, local)
 
 # this is stinky
@@ -109,7 +109,7 @@ func process_message(lit_text, final, prefix, suffix, endcap, spoken_text, local
 		"custom_name_enabled": custom_name_enabled, "allow_bbcode": allow_bbcode,
 		"allowed_tags": allowed_tags
 	}
-	print("FUCK ", thing)
+	#print("FUCK ", thing)
 	if Network.GAME_MASTER and lit_text.begins_with("%"):
 		var bb_dat = bbcode_process(lit_text)
 		lucy_send_message(lit_text.trim_prefix('%'), bb_dat.stripped, false)
@@ -125,7 +125,7 @@ func process_message(lit_text, final, prefix, suffix, endcap, spoken_text, local
 			msg = prefix + "%u" + endcap + p.fin + suffix
 			boring_msg = prefix + "%u" + endcap + p.stripped + suffix
 			speak = p.stripped
-		print("FUCK3 ", {"msg":msg,"boring_msg":boring_msg,"p":p})
+		#print("FUCK3 ", {"msg":msg,"boring_msg":boring_msg,"p":p})
 		if msg != "": lucy_send_message(msg, boring_msg, local)
 		
 		if spoken_text != "" and colon: playerhud.emit_signal("_message_sent", speak)

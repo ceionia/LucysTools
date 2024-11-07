@@ -47,6 +47,8 @@ public class LucyServerBrowserChanges: IScriptMod
             code_to_add = new Token[] {
                 new Token(TokenType.Comma),
                 new IdentifierToken("lucy_display"),
+                new Token(TokenType.OpAssign),
+                new ConstantToken(new StringVariant("")),
             }
         },
         new CodeChange {

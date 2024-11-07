@@ -47,12 +47,13 @@ func _ready():
 	
 	visible = MANAGER.lucys_menu_visible
 	
-	get_node("%lucy_bbcode").disabled = MANAGER.host_required and not Network.GAME_MASTER 
-	get_node("%lucy_raincloud").disabled = not Network.GAME_MASTER or not MANAGER.ingame
-	get_node("%lucy_meteor").disabled = not Network.GAME_MASTER or not MANAGER.ingame
-	get_node("%lucy_freezerain").disabled = not Network.GAME_MASTER or not MANAGER.ingame
-	get_node("%lucy_clearrain").disabled = not Network.GAME_MASTER or not MANAGER.ingame
-	get_node("%lucy_clearmeteor").disabled = not Network.GAME_MASTER or not MANAGER.ingame
+	var can_spawn = (Network.GAME_MASTER or Network.PLAYING_OFFLINE) and MANAGER.ingame
+	
+	get_node("%lucy_raincloud").disabled = not can_spawn
+	get_node("%lucy_meteor").disabled = not can_spawn
+	get_node("%lucy_freezerain").disabled = not can_spawn
+	get_node("%lucy_clearrain").disabled = not can_spawn
+	get_node("%lucy_clearmeteor").disabled = not can_spawn
 
 func _input(event):
 	if event is InputEventKey and event.scancode == KEY_F5 && event.pressed:

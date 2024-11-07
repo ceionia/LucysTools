@@ -32,3 +32,9 @@ initial release
 - intrusive bbcode now client toggle
 - lots of stuff removed due to 1.09 having it already! 
 - panel stays closed if closed, open if open
+
+0.5.1
+----
+- Lure 4.1.0 compatibility
+- log fixes
+- spawn fixes
