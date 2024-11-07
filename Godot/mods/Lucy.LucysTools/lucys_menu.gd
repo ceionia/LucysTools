@@ -6,13 +6,11 @@ func setup():
 	get_node("%lucy_bbcode").pressed = MANAGER.allow_bbcode
 	get_node("%lucy_punchback").pressed = MANAGER.do_punchback
 	get_node("%lucy_servername").text = MANAGER.custom_server_name
-	get_node("%lucy_servername_preview").bbcode_text = MANAGER.custom_server_name + "'s Lobby"
+	get_node("%lucy_servername_preview").bbcode_text = MANAGER.custom_server_name
 	get_node("%lucy_servermsg").text = MANAGER.server_join_message
 	get_node("%lucy_servermsg_preview").bbcode_text = MANAGER.server_join_message
-	get_node("%lucy_fpackets").value = MANAGER.frame_packets
-	get_node("%lucy_bpackets").value = MANAGER.bulk_packets
-	get_node("%lucy_binterval").value = MANAGER.bulk_interval
-	get_node("%lucy_finterval").value = MANAGER.full_interval
+	var srv_m_bb = MANAGER.bbcode_process(MANAGER.server_join_message)
+	get_node("%lucy_servermsg_preview2").bbcode_text = srv_m_bb.stripped
 	
 	get_node("%lucy_intbbcode").pressed = MANAGER.allow_intrusive_bbcode
 	
@@ -25,7 +23,6 @@ func setup():
 	
 
 func update():
-	get_node("%lucy_srv_allow_bbcode").text = "Yes" if MANAGER.srv_allow_bbcode else "No"
 	_on_lucy_name_text_changed(MANAGER.custom_name)
 	
 
@@ -41,12 +38,14 @@ func _on_lucy_name_text_changed(new_text):
 	get_node("%lucy_namegood").bbcode_text = "[color=green]Good[/color]" if good else "[color=red]Bad[/color]"
 	
 	MANAGER.custom_name_enabled = good
-	MANAGER.custom_name = result.fin
+	MANAGER.custom_name = new_text
 
 func _ready():
 	print("[LUCY] Menu Ready")
 	
 	MANAGER = $"/root/LucyLucysTools"
+	
+	visible = MANAGER.lucys_menu_visible
 	
 	get_node("%lucy_bbcode").disabled = MANAGER.host_required and not Network.GAME_MASTER 
 	get_node("%lucy_raincloud").disabled = not Network.GAME_MASTER or not MANAGER.ingame
@@ -59,13 +58,16 @@ func _input(event):
 	if event is InputEventKey and event.scancode == KEY_F5 && event.pressed:
 		visible = !visible
 		print("[LUCY] Menu visble: ", visible)
+		MANAGER.lucys_menu_visible = visible
 	
 	if event is InputEventKey and event.scancode == KEY_F6 && event.pressed:
 		var name = Steam.getLobbyData(Network.STEAM_LOBBY_ID, "name")
+		var lname = Steam.getLobbyData(Network.STEAM_LOBBY_ID, "lobby_name")
 		var nm = Steam.getNumLobbyMembers(Network.STEAM_LOBBY_ID)
 		var code = Steam.getLobbyData(Network.STEAM_LOBBY_ID, "code")
 		var type = Steam.getLobbyData(Network.STEAM_LOBBY_ID, "type")
-		var lobby_dat = {"name": name, "nm": nm, "code": code, "type": type}
+		var bbname = Steam.getLobbyData(Network.STEAM_LOBBY_ID, "bbcode_lobby_name")
+		var lobby_dat = {"name": name, "lobby_name":lname, "bbcode_lobby_name":bbname, "nm": nm, "code": code, "type": type}
 		print("[LUCY] LOBBY ", lobby_dat)
 
 func _on_lucy_bbcode_toggled(button_pressed):
@@ -73,19 +75,13 @@ func _on_lucy_bbcode_toggled(button_pressed):
 func _on_lucy_punchback_toggled(button_pressed):
 	MANAGER.do_punchback =  button_pressed
 func _on_lucy_servername_text_changed(new_text):
-	get_node("%lucy_servername_preview").bbcode_text = new_text + "'s Lobby"
+	get_node("%lucy_servername_preview").bbcode_text = new_text
 	MANAGER.custom_server_name = new_text
 func _on_lucy_servermsg_text_changed(new_text):
-	get_node("%lucy_servermsg_preview").bbcode_text = new_text
+	var result = MANAGER.bbcode_process(new_text)
+	get_node("%lucy_servermsg_preview").bbcode_text = result.fin
+	get_node("%lucy_servermsg_preview2").bbcode_text = result.stripped
 	MANAGER.server_join_message = new_text
-func _on_lucy_fpackets_value_changed(value):
-	MANAGER.frame_packets = value
-func _on_lucy_bpackets_value_changed(value):
-	MANAGER.bulk_packets = value
-func _on_lucy_binterval_value_changed(value):
-	MANAGER.bulk_interval = value
-func _on_lucy_finterval_value_changed(value):
-	MANAGER.full_interval = value
 func _on_lucy_chatcolor_bool_toggled(button_pressed):
 	MANAGER.custom_color_enabled = button_pressed
 func _on_lucy_chatcolor_color_changed(color):
@@ -132,8 +128,7 @@ func _on_lucy_clearrain_pressed():
 		cloud._deinstantiate(true)
 
 func _on_lucy_clearchat_pressed():
-	Network.GAMECHAT = ""
-	Network.LOCAL_GAMECHAT = ""
+	Network._wipe_chat()
 	Network.emit_signal("_chat_update")
 
 func _on_lucy_clearmeteor_pressed():
