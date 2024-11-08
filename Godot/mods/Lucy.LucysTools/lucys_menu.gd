@@ -8,16 +8,22 @@ func setup():
 	get_node("%lucy_servername").text = MANAGER.custom_server_name
 	get_node("%lucy_servername_preview").bbcode_text = MANAGER.custom_server_name
 	get_node("%lucy_servermsg").text = MANAGER.server_join_message
-	get_node("%lucy_servermsg_preview").bbcode_text = MANAGER.server_join_message
-	var srv_m_bb = MANAGER.bbcode_process(MANAGER.server_join_message)
+	var srv_m_bb = MANAGER.bbcode_process(MANAGER.server_join_message, 512)
+	get_node("%lucy_servermsg_preview").bbcode_text = srv_m_bb.fin
 	get_node("%lucy_servermsg_preview2").bbcode_text = srv_m_bb.stripped
 	
 	get_node("%lucy_intbbcode").pressed = MANAGER.allow_intrusive_bbcode
 	
 	get_node("%lucy_chatcolor_bool").pressed = MANAGER.custom_color_enabled
 	get_node("%lucy_chatcolor").color = Color(MANAGER.custom_color)
+	get_node("%lucy_chatcolor_bool2").pressed = MANAGER.custom_text_color_enabled
+	get_node("%lucy_chatcolor2").color = Color(MANAGER.custom_text_color)
 	
 	get_node("%lucy_name").text = MANAGER.custom_name
+	
+	get_node("%lucy_bug_bb").pressed = MANAGER.bug_bbcode
+	
+	get_node("%lucy_srv_bbcode").pressed = MANAGER.srv_bbcode
 	
 	update()
 	
@@ -27,10 +33,7 @@ func update():
 	
 
 func _on_lucy_name_text_changed(new_text):
-	var result = MANAGER.bbcode_process(new_text)
-	#print("[fin] ", result.fin)
-	#print("[tags] ", result.tags)
-	#print("[stripped] ", result.stripped)
+	var result = MANAGER.bbcode_process(new_text, 512)
 	
 	var lol_steam_username = Network.STEAM_USERNAME.replace("[", "").replace("]", "")
 	var good = result.stripped == lol_steam_username
@@ -54,6 +57,8 @@ func _ready():
 	get_node("%lucy_freezerain").disabled = not can_spawn
 	get_node("%lucy_clearrain").disabled = not can_spawn
 	get_node("%lucy_clearmeteor").disabled = not can_spawn
+	
+	get_node("%lucy_srv_bbcode").disabled = not (Network.GAME_MASTER or Network.PLAYING_OFFLINE)
 
 func _input(event):
 	if event is InputEventKey and event.scancode == KEY_F5 && event.pressed:
@@ -79,7 +84,7 @@ func _on_lucy_servername_text_changed(new_text):
 	get_node("%lucy_servername_preview").bbcode_text = new_text
 	MANAGER.custom_server_name = new_text
 func _on_lucy_servermsg_text_changed(new_text):
-	var result = MANAGER.bbcode_process(new_text)
+	var result = MANAGER.bbcode_process(new_text, 512)
 	get_node("%lucy_servermsg_preview").bbcode_text = result.fin
 	get_node("%lucy_servermsg_preview2").bbcode_text = result.stripped
 	MANAGER.server_join_message = new_text
@@ -87,11 +92,20 @@ func _on_lucy_chatcolor_bool_toggled(button_pressed):
 	MANAGER.custom_color_enabled = button_pressed
 func _on_lucy_chatcolor_color_changed(color):
 	MANAGER.custom_color = color
+func _on_lucy_chatcolor_bool2_toggled(button_pressed):
+	MANAGER.custom_text_color_enabled = button_pressed
+func _on_lucy_chatcolor2_color_changed(color):
+	MANAGER.custom_text_color = color
 func _on_lucy_intbbcode_toggled(button_pressed):
 	MANAGER.allow_intrusive_bbcode = button_pressed
+func _on_lucy_bug_bb_toggled(button_pressed):
+	MANAGER.bug_bbcode = button_pressed
+func _on_lucy_srv_bbcode_toggled(button_pressed):
+	if (not Network.GAME_MASTER and not Network.PLAYING_OFFLINE): return
+	MANAGER.srv_bbcode = button_pressed
 
 func _on_lucy_raincloud_pressed():
-	if not MANAGER.ingame: return
+	if not MANAGER.ingame or (not Network.GAME_MASTER and not Network.PLAYING_OFFLINE): return
 	print("[LUCY] Spawning raincloud")
 	var player = MANAGER.get_player()
 	var pos = Vector3(player.global_transform.origin.x, 42, player.global_transform.origin.z)
@@ -99,7 +113,7 @@ func _on_lucy_raincloud_pressed():
 	Network._sync_create_actor("raincloud", pos, zone, - 1, Network.STEAM_ID)
 
 func _on_lucy_meteor_pressed():
-	if not MANAGER.ingame: return
+	if not MANAGER.ingame or (not Network.GAME_MASTER and not Network.PLAYING_OFFLINE): return
 	if get_tree().get_nodes_in_group("meteor").size() > 10: return
 	print("[LUCY] Spawning meteor")
 	var player_pos = MANAGER.get_player().global_transform.origin
@@ -115,7 +129,7 @@ func _on_lucy_meteor_pressed():
 	Network._sync_create_actor("fish_spawn_alien", pos, zone, - 1, Network.STEAM_ID)
 
 func _on_lucy_freezerain_pressed():
-	if not MANAGER.ingame or not Network.GAME_MASTER: return
+	if not MANAGER.ingame or (not Network.GAME_MASTER and not Network.PLAYING_OFFLINE): return
 	print("[LUCY] Freezing rain")
 	for cloud in get_tree().get_nodes_in_group("raincloud"):
 		if cloud.controlled == true:
@@ -123,7 +137,7 @@ func _on_lucy_freezerain_pressed():
 			cloud.decay = false
 
 func _on_lucy_clearrain_pressed():
-	if not MANAGER.ingame or not Network.GAME_MASTER: return
+	if not MANAGER.ingame or (not Network.GAME_MASTER and not Network.PLAYING_OFFLINE): return
 	print("[LUCY] Clearing rain")
 	for cloud in get_tree().get_nodes_in_group("raincloud"):
 		cloud._deinstantiate(true)
@@ -133,7 +147,7 @@ func _on_lucy_clearchat_pressed():
 	Network.emit_signal("_chat_update")
 
 func _on_lucy_clearmeteor_pressed():
-	if not MANAGER.ingame or not Network.GAME_MASTER: return
+	if not MANAGER.ingame or (not Network.GAME_MASTER and not Network.PLAYING_OFFLINE): return
 	print("[LUCY] Clearing meteor")
 	for meteor in get_tree().get_nodes_in_group("meteor"):
 		meteor._deinstantiate(true)
