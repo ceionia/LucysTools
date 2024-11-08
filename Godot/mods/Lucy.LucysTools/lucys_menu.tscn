@@ -21,7 +21,7 @@ margin_bottom = 493.0
 [node name="Label" type="Label" parent="PanelContainer/VBoxContainer"]
 margin_right = 786.0
 margin_bottom = 14.0
-text = "Lucy's Options 0.6.0 - F5 to Toggle Menu"
+text = "Lucy's Options 0.6.1 - F5 to Toggle Menu"
 
 [node name="HSeparator" type="HSeparator" parent="PanelContainer/VBoxContainer"]
 margin_top = 18.0

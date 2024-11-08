@@ -44,3 +44,7 @@ initial release
 - custom text color (bbcode qol)
 - experimental color bug bbcode
 - better (actually somewhat working) bbcode filtering
+
+0.6.1
+----
+- menu doesn't auto-open if it was closed

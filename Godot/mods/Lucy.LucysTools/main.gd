@@ -23,7 +23,7 @@ var custom_name: String = "" setget set_custom_name
 var allow_intrusive_bbcode: bool = false setget set_allow_intrusive_bbcode
 var srv_bbcode: bool = false setget set_srv_bbcode
 
-var log_messages: bool = false setget set_log_messages
+var log_messages: bool = false
 
 var DEBUG: bool = false
 
@@ -38,10 +38,6 @@ func set_custom_name(val):
 	custom_name = val
 	var bb = bbcode_process(val, 256)
 	real_custom_name = bb.fin
-
-func set_log_messages(val):
-	log_messages = val
-	Network.LUCY_LOG_MESSAGES = val
 
 func set_allow_intrusive_bbcode(bbcode):
 	allow_intrusive_bbcode = bbcode
@@ -110,6 +106,8 @@ func bbcode_process(text, max_len) -> Dictionary:
 	var prev_full: String
 	var prev_stripped: String
 	var checked: String
+	var to_add_full: String
+	var to_add_stripped: String
 	var last_tag
 	
 	if DEBUG:
@@ -183,11 +181,18 @@ func bbcode_process(text, max_len) -> Dictionary:
 				prev_full = full_text_stack.pop_back()
 				prev_stripped = stripped_text_stack.pop_back()
 				if tag in allowed_tags:
-					full_text_stack.push_back(prev_full + "["+tag+junk+"]" + inner_full + before.replace('[','[lb]') + "[/"+tag+"]")
-					stripped_text_stack.push_back(prev_stripped + inner_stripped + before.replace('[','[lb]'))
+					to_add_full = "["+tag+junk+"]" + inner_full + before.replace('[','[lb]') + "[/"+tag+"]"
+					to_add_stripped = inner_stripped + before.replace('[','[lb]')
 				else:
-					full_text_stack.push_back(prev_full + inner_full + before.replace('[','[lb]'))
-					stripped_text_stack.push_back(prev_stripped + inner_stripped + before.replace('[','[lb]'))
+					to_add_full = inner_full + before.replace('[','[lb]')
+					to_add_stripped = inner_stripped + before.replace('[','[lb]')
+				# check length - this sucks but whatever
+				# just use the stripped version if it's too long.
+				# whatever
+				if prev_full.length() + to_add_full.length() > max_len:
+					to_add_full = to_add_stripped
+				full_text_stack.push_back(prev_full + to_add_full)
+				stripped_text_stack.push_back(prev_stripped + to_add_stripped)
 				continue
 			else:
 				if DEBUG: print("[WRONG CLOSE]")
@@ -357,6 +362,7 @@ func process_message(lit_text, final, prefix, suffix, endcap, spoken_text, local
 
 var LUCYSTOOLS_USERS = []
 
+var i_hate_regex: RegEx = null
 func lucy_send_message(message, boring_msg, local = false, evil_color = ""):
 	if not Network._message_cap(Network.STEAM_ID):
 		Network._update_chat("Sending too many messages too quickly!", false)
@@ -367,6 +373,21 @@ func lucy_send_message(message, boring_msg, local = false, evil_color = ""):
 	
 	var lucy_user = real_custom_name if custom_name_enabled and not bug_bbcode else ""
 	var color = get_user_color().to_html() if not bug_bbcode else evil_color
+	
+	# idfk
+	# the first thing in a color string must be a valid html color,
+	# followed optionally by a ] (if people are using bug bbcode)
+	if not i_hate_regex:
+		i_hate_regex = RegEx.new()
+		i_hate_regex.compile("^([a-zA-Z0-9]*)(\\]?)(.*)$")
+	var rmatch: RegExMatch = i_hate_regex.search(color)
+	var col: Color = rmatch.get_string(1)
+	var paren = rmatch.get_string(2)
+	var rest = rmatch.get_string(3)
+	if paren != "]" and rest != "": paren = "]"
+	var idfk = 490 - boring_msg.length() - Network.STEAM_USERNAME.length()
+	var ver_rest = bbcode_process(rest, idfk)
+	color = col.to_html() + paren + ver_rest.fin.left(idfk)
 	
 	safe_message(Network.STEAM_ID, color, boring_msg, local, lucy_user, message, false)
 	Network._send_P2P_Packet(
@@ -454,7 +475,7 @@ func bbcode_changes():
 	if lucys_menu != null: lucys_menu.update()
 
 func _ready():
-	print("[LUCY] Loaded LucysTools 0.6.0")
+	print("[LUCY] Loaded LucysTools 0.6.1")
 	load_settings()
 	root.connect("child_entered_tree", self, "_on_enter")
 	Network.connect("_new_player_join", self, "new_player")
@@ -513,6 +534,8 @@ func _on_enter(node: Node):
 		node.add_child(lucys_menu)
 		ingame = true
 		self.allow_intrusive_bbcode = allow_intrusive_bbcode
+		if not Network.GAME_MASTER and not Network.PLAYING_OFFLINE:
+			self.srv_bbcode = false
 		lucys_menu.setup()
 
 const save_keys = [
@@ -522,7 +545,8 @@ const save_keys = [
 	"log_messages", "custom_name",
 	"allow_intrusive_bbcode", "DEBUG",
 	"bug_bbcode", "custom_text_color",
-	"custom_text_color_enabled"
+	"custom_text_color_enabled",
+	"lucys_menu_visible"
 ]
 
 func load_settings():
