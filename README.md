@@ -7,7 +7,9 @@ Client Features:
 - Lets you clear gamechat
 - Allows custom name color (for all users)
 - Allows custom name BBCode (for compatible peers)
+- Allows custom text color (for compatible peers)
 - Allows BBCode in chat (for compatible peers)
+- (Bug BBCode) Allows BBCode in chat for everyone to see
 
 Host Features:
 - Lets you set a message that will be sent when someone joins.

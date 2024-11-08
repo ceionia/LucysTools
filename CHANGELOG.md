@@ -38,3 +38,9 @@ initial release
 - Lure 4.1.0 compatibility
 - log fixes
 - spawn fixes
+
+0.6.0
+----
+- custom text color (bbcode qol)
+- experimental color bug bbcode
+- better (actually somewhat working) bbcode filtering
