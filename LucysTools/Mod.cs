@@ -13,7 +13,6 @@ public class Mod : IMod {
         modInterface.Logger.Information("Lucy was here :3");
         ModInterface = modInterface;
         modInterface.RegisterScriptMod(new LucysChatChanges());
-        modInterface.RegisterScriptMod(new LucysNetFixes());
         modInterface.RegisterScriptMod(new LucyServerBrowserChanges());
         modInterface.RegisterScriptMod(new LucyMainMenuChanges());
     }
@@ -215,7 +214,7 @@ public class LucysChatChanges : IScriptMod
 
     CodeChange[] changes = {
         new CodeChange {
-            name = "save lit text",
+            name = "chat process intercept",
             // color.to_html()
             //
             // END
@@ -228,83 +227,25 @@ public class LucysChatChanges : IScriptMod
                 t => t.Type == TokenType.Newline,
                 t => t.Type == TokenType.Newline,
             },
-            // var lit_text = text
+            // $"/root/LucyLucysTools".process_message(text, chat_local, player, self)
+            // return
             code_to_add = new Token[] {
-                new Token(TokenType.PrVar),
-                new IdentifierToken("lit_text"),
-                new Token(TokenType.OpAssign),
-                new IdentifierToken("text"),
-                new Token(TokenType.Newline, 1),
-            }
-        },
-
-        new CodeChange {
-            name = "chat bbcode",
-            // endcap + final_text + suffix
-            // END
-            multitoken_prefix = new Func<Token, bool>[] {
-                t => t is IdentifierToken {Name: "endcap"},
-                t => t.Type == TokenType.OpAdd,
-                t => t is IdentifierToken {Name: "final_text"},
-                t => t.Type == TokenType.OpAdd,
-                t => t is IdentifierToken {Name: "suffix"},
-                t => t.Type == TokenType.Newline,
-            },
-            // if $"/root/LucyLucysTools".INTERCEPT_SEND_MSG:
-            //     var tmp = $"/root/LucyLucysTools".process_message(lit_text, final, prefix, suffix, endcap, final_color, spoken_text, chat_local, colon, self)
-            //     if tmp[0]: return
-            //     final_color = tmp[1]
-            // END
-            code_to_add = new Token[] {
-                new Token(TokenType.CfIf),
-                new Token(TokenType.Dollar),
-                new ConstantToken(new StringVariant("/root/LucyLucysTools")),
-                new Token(TokenType.Colon),
-                new Token(TokenType.Newline, 2),
-
-                new Token(TokenType.PrVar),
-                new IdentifierToken("tmp"),
-                new Token(TokenType.OpAssign),
                 new Token(TokenType.Dollar),
                 new ConstantToken(new StringVariant("/root/LucyLucysTools")),
                 new Token(TokenType.Period),
                 new IdentifierToken("process_message"),
                 new Token(TokenType.ParenthesisOpen),
-                new IdentifierToken("lit_text"),
-                new Token(TokenType.Comma),
-                new IdentifierToken("final"),
-                new Token(TokenType.Comma),
-                new IdentifierToken("prefix"),
-                new Token(TokenType.Comma),
-                new IdentifierToken("suffix"),
-                new Token(TokenType.Comma),
-                new IdentifierToken("endcap"),
-                new Token(TokenType.Comma),
-                new IdentifierToken("spoken_text"),
+                new IdentifierToken("text"),
                 new Token(TokenType.Comma),
                 new IdentifierToken("chat_local"),
                 new Token(TokenType.Comma),
-                new IdentifierToken("colon"),
+                new IdentifierToken("player"),
                 new Token(TokenType.Comma),
                 new Token(TokenType.Self),
                 new Token(TokenType.ParenthesisClose),
-                new Token(TokenType.Newline, 2),
+                new Token(TokenType.Newline, 1),
 
-                new Token(TokenType.CfIf),
-                new IdentifierToken("tmp"),
-                new Token(TokenType.BracketOpen),
-                new ConstantToken(new IntVariant(0)),
-                new Token(TokenType.BracketClose),
-                new Token(TokenType.Colon),
                 new Token(TokenType.CfReturn),
-                new Token(TokenType.Newline, 2),
-
-                new IdentifierToken("final_color"),
-                new Token(TokenType.OpAssign),
-                new IdentifierToken("tmp"),
-                new Token(TokenType.BracketOpen),
-                new ConstantToken(new IntVariant(1)),
-                new Token(TokenType.BracketClose),
                 new Token(TokenType.Newline, 1),
             }
         },
@@ -337,68 +278,3 @@ public class LucysChatChanges : IScriptMod
     }
 }
 
-public class LucysNetFixes : IScriptMod {
-    bool IScriptMod.ShouldRun(string path) => path == "res://Scenes/Singletons/SteamNetwork.gdc";
-
-    CodeChange[] changes = {
-        new CodeChange {
-            name = "read packet intercept",
-            // FLUSH_PACKET_INFORMATION[PACKET_SENDER] += 1
-            // END
-            multitoken_prefix = new Func<Token, bool>[] {
-                t => t is IdentifierToken {Name: "FLUSH_PACKET_INFORMATION"},
-                t => t.Type == TokenType.BracketOpen,
-                t => t is IdentifierToken {Name: "PACKET_SENDER"},
-                t => t.Type == TokenType.BracketClose,
-                t => t.Type == TokenType.OpAssignAdd,
-                t => t is ConstantToken {Value:IntVariant{Value: 1}},
-                t => t.Type == TokenType.Newline,
-            },
-            // if $"/root/LucyLucysTools".process_read(DATA, PACKET_SENDER, from_host): return
-            // END
-            code_to_add = new Token[] {
-                new Token(TokenType.CfIf),
-                new Token(TokenType.Dollar),
-                new ConstantToken(new StringVariant("/root/LucyLucysTools")),
-                new Token(TokenType.Period),
-                new IdentifierToken("process_read"),
-                new Token(TokenType.ParenthesisOpen),
-                new IdentifierToken("DATA"),
-                new Token(TokenType.Comma),
-                new IdentifierToken("PACKET_SENDER"),
-                new Token(TokenType.Comma),
-                new IdentifierToken("from_host"),
-                new Token(TokenType.ParenthesisClose),
-                new Token(TokenType.Colon),
-                new Token(TokenType.CfReturn),
-                new Token(TokenType.Newline, 2),
-            }
-        },
-    };
-
-    IEnumerable<Token> IScriptMod.Modify(string path, IEnumerable<Token> tokens)
-    {
-        var pending_changes = changes
-            .Select(c => (c, new MultiTokenWaiter(c.multitoken_prefix)))
-            .ToList();
-
-        // I'm sure there's a better way to do this
-        // with list comprehension stuff, but my 
-        // C# is too rusty
-        foreach (var token in tokens) {
-            var had_change = false;
-            foreach (var (change, waiter) in pending_changes) {
-                if (waiter.Check(token)) {
-                    Mod.ModInterface.Logger.Information($"Adding Lucy Network mod {change.name}");
-
-                    yield return token;
-                    foreach (var t in change.code_to_add) yield return t;
-
-                    had_change = true;
-                    break;
-                }
-            }
-            if (!had_change) yield return token;
-        }
-    }
-}

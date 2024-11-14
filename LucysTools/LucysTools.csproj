@@ -14,21 +14,4 @@
     <ItemGroup>
         <None Include="manifest.json" CopyToOutputDirectory="PreserveNewest"/>
     </ItemGroup>
-
-    <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(GDWeavePath)' != ''">
-        <PropertyGroup>
-            <IsWindows Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))'">true</IsWindows>
-            <IsLinux Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))'">true</IsLinux>
-        </PropertyGroup>
-
-        <Exec
-                Command="xcopy /Y /I &quot;$(TargetDir)&quot; &quot;$(GDWeavePath)/mods/$(AssemblyName)&quot;"
-                Condition="'$(IsWindows)' == 'true'" 
-        />
-
-        <Exec
-                Command="cp -r $(TargetDir) '$(GDWeavePath)/mods/$(AssemblyName)/'"
-                Condition="'$(IsLinux)' == 'true'" 
-        />
-    </Target>
 </Project>

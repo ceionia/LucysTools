@@ -1,5 +1,6 @@
 {
   "Id": "Lucy.LucysTools",
   "AssemblyPath": "LucysTools.dll",
-  "PackPath": "LucysTools.pck"
+  "PackPath": "LucysTools.pck",
+  "Dependencies": [ "LucysLib" ]
 }
