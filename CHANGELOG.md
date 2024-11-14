@@ -48,3 +48,10 @@ initial release
 0.6.1
 ----
 - menu doesn't auto-open if it was closed
+
+0.7.0
+----
+- update to webfishing 1.10
+- bbcode stuff only to lucystools users, color bug was patched
+- LucysLib 0.1.0 dependency
+- custom lobby code
